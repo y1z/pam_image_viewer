@@ -1,7 +1,7 @@
 # pam image viewer (piv)
 Is a image viewer for the [.PAM file format][pam-format-wiki]
 
-  - here is the [PAM-file-specefication][pam-format-spec] for deails on the format.
+  - here is the [PAM file specefication][pam-format-spec] for deails on the format.
 
 
 
