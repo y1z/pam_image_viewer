@@ -1,6 +1,4 @@
-use sdl2::render::Canvas;
-
-pub fn help_canvas_size(canvas: &sdl2::render::WindowCanvas) -> (i32, i32) {
+pub fn help_get_canvas_display_mode(canvas: &sdl2::render::WindowCanvas) -> (i32, i32) {
   let display_mode_some = canvas.window().display_mode();
 
   return match display_mode_some.is_ok() {
