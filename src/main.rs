@@ -14,23 +14,75 @@ use std::time::Duration;
 const DEFAULT_WIDTH: u32 = 800;
 const DEFAULT_HEIGHT: u32 = 600;
 
-pub fn main() {
-  let sdl_context = sdl2::init().unwrap();
-  let video_subsystem = sdl_context.video().unwrap();
+pub struct BasicSdlSystem {
+  pub sdl_context: sdl2::Sdl,
+  pub video_subsystem: sdl2::VideoSubsystem,
+}
 
-  let window = video_subsystem
-    .window("rust-sdl2 demo", DEFAULT_WIDTH, DEFAULT_HEIGHT)
+type MainReturn = std::result::Result<(), String>;
+
+pub fn main() -> MainReturn {
+  run()
+}
+
+pub fn init_basic_sdl_system() -> BasicSdlSystem {
+  let sdl_context_ = sdl2::init();
+  if sdl_context_.is_err() {
+    panic!("could not start SDL2 (could not start the context)");
+  }
+  let raw_sdl_context_ = sdl_context_.unwrap();
+  let v_subsystem = raw_sdl_context_.video();
+  if v_subsystem.is_err() {
+    panic!("could not start the SDL2 video subsystem");
+  }
+
+  BasicSdlSystem {
+    sdl_context: raw_sdl_context_,
+    video_subsystem: v_subsystem.unwrap(),
+  }
+}
+
+pub fn init_window(
+  video_subsystem: &mut sdl2::VideoSubsystem,
+  width: u32,
+  height: u32,
+) -> sdl2::video::Window {
+  video_subsystem
+    .window("PIV", width, height)
     .position_centered()
     .resizable()
     .build()
-    .unwrap();
-  let mut canvas = window.into_canvas().build().unwrap();
-  canvas.set_logical_size(DEFAULT_WIDTH, DEFAULT_HEIGHT);
-  canvas.set_draw_color(sdl2::pixels::Color::BLACK);
-  canvas.clear();
-  canvas.present();
+    .unwrap()
+}
+
+pub fn init_canvas(
+  window: sdl2::video::Window,
+  width: u32,
+  height: u32,
+) -> sdl2::render::WindowCanvas {
+  let mut res = window.into_canvas().build().unwrap();
+  res.set_logical_size(width, height);
+  return res;
+}
+
+pub fn run() -> MainReturn {
+  let mut basic_sdl_system = init_basic_sdl_system();
+  let mut window = init_window(
+    &mut basic_sdl_system.video_subsystem,
+    DEFAULT_WIDTH,
+    DEFAULT_HEIGHT,
+  );
+  let mut canvas = init_canvas(window, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+
+  return main_loop(basic_sdl_system, &mut canvas);
+}
+
+pub fn main_loop(
+  sdl_system: BasicSdlSystem,
+  canvas: &mut sdl2::render::WindowCanvas,
+) -> MainReturn {
   let mut current_rect = Rect::new(0, 0, 100 / 4, 100 / 4);
-  let mut event_pump = sdl_context.event_pump().unwrap();
+  let mut event_pump = sdl_system.sdl_context.event_pump().unwrap();
   let mut i = 0;
   'running: loop {
     i = (i + 1) % 255;
@@ -52,20 +104,12 @@ pub fn main() {
           keymod,
           repeat,
           ..
-        } => {
-          let raw_keycode = keycode.unwrap();
-          match raw_keycode {
-            Keycode::W => {
-              println!("you are pressing the {} key", raw_keycode);
-            }
-            _ => {}
-          }
-        }
+        } => {}
         Event::Window { win_event, .. } => match win_event {
           sdl2::event::WindowEvent::Resized(x, y) => {
             let canvas_display_mode = help_get_canvas_display_mode(&canvas);
             println!(
-              "\n display_mode width [{}] and height [{}]\nResized width [{}] height [{}]",
+              "\nDisplay_mode width [{}] and height [{}]\nResized width [{}] height [{}]",
               canvas_display_mode.0, canvas_display_mode.1, x, y
             );
           }
@@ -83,4 +127,10 @@ pub fn main() {
     canvas.present();
     ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
   }
+
+  canvas.set_draw_color(sdl2::pixels::Color::BLACK);
+  canvas.clear();
+  canvas.present();
+
+  return Ok(());
 }
