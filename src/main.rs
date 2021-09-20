@@ -1,9 +1,11 @@
 //extern crate sdl2;
 pub mod helper {
   pub mod helper_canvas;
+  pub mod helper_ui;
 }
 
 use helper::helper_canvas::help_get_canvas_display_mode;
+use helper::*;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
@@ -81,18 +83,46 @@ pub fn main_loop(
   sdl_system: BasicSdlSystem,
   canvas: &mut sdl2::render::WindowCanvas,
 ) -> MainReturn {
-  let mut current_rect = Rect::new(0, 0, 100 / 4, 100 / 4);
+  const color_array: [Color; 6] = [
+    Color::BLUE,
+    Color::RED,
+    Color::GREEN,
+    Color::YELLOW,
+    Color::MAGENTA,
+    Color::WHITE,
+  ];
+
+  let mut current_rect = Rect::new(0, 0, 10, 10);
   let mut event_pump = sdl_system.sdl_context.event_pump().unwrap();
-  let mut i = 0;
+  let mut delta_time = std::time::Duration::new(0, 0);
+  let mut seconds_passed = delta_time.as_secs_f32();
   'running: loop {
-    i = (i + 1) % 255;
-    let canvas_size = canvas.logical_size();
-    canvas.set_draw_color(Color::RGB(i, 64, 255 - i));
+    let start_time = std::time::SystemTime::now();
+    seconds_passed += delta_time.as_secs_f32();
+
+    let sin_wave_abs = seconds_passed.sin().abs();
+    canvas.set_draw_color(Color::RGB(
+      (255 as f32 * sin_wave_abs) as u8,
+      64,
+      255 - (255 as f32 * sin_wave_abs) as u8,
+    ));
+
     canvas.clear();
-    canvas.set_draw_color(Color::BLACK);
-    canvas.fill_rect(current_rect);
-    let current_x = current_rect.x();
-    current_rect.set_x((current_x + 1) % canvas_size.0 as i32);
+
+    let canvas_size = canvas.logical_size();
+    let view_width = helper::helper_ui::calculate_ui_element_width(0.80, canvas_size.0);
+    let view_height = helper_ui::calculate_ui_element_height(sin_wave_abs, canvas_size.1);
+
+    for x in 0..view_width / current_rect.width() {
+      for y in 0..view_height / current_rect.height() {
+        let color_index = (x + y + 1) as usize % color_array.len();
+        canvas.set_draw_color(color_array[color_index]);
+        current_rect.set_x(x as i32 * current_rect.width() as i32);
+        current_rect.set_y(y as i32 * current_rect.height() as i32);
+        canvas.fill_rect(current_rect);
+      }
+    }
+
     for event in event_pump.poll_iter() {
       match event {
         Event::Quit { timestamp: u32 } => break 'running,
@@ -126,11 +156,8 @@ pub fn main_loop(
     // The rest of the game loop goes here...
     canvas.present();
     ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+    let end_timer = std::time::SystemTime::now();
+    delta_time = end_timer.duration_since(start_time).unwrap()
   }
-
-  canvas.set_draw_color(sdl2::pixels::Color::BLACK);
-  canvas.clear();
-  canvas.present();
-
   return Ok(());
 }
