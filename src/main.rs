@@ -83,19 +83,41 @@ pub fn main_loop(
   sdl_system: BasicSdlSystem,
   canvas: &mut sdl2::render::WindowCanvas,
 ) -> MainReturn {
-  const color_array: [Color; 6] = [
-    Color::BLUE,
-    Color::RED,
-    Color::GREEN,
-    Color::YELLOW,
-    Color::MAGENTA,
-    Color::WHITE,
-  ];
-
   let mut current_rect = Rect::new(0, 0, 10, 10);
   let mut event_pump = sdl_system.sdl_context.event_pump().unwrap();
   let mut delta_time = std::time::Duration::new(0, 0);
   let mut seconds_passed = delta_time.as_secs_f32();
+
+  let pixel_buffer = [
+    Color::BLUE,
+    Color::BLUE,
+    Color::BLUE,
+    Color::BLUE,
+    Color::BLUE,
+    Color::RED,
+    Color::RED,
+    Color::RED,
+    Color::RED,
+    Color::RED,
+    Color::GREEN,
+    Color::GREEN,
+    Color::GREEN,
+    Color::GREEN,
+    Color::GREEN,
+    Color::BLACK,
+    Color::BLACK,
+    Color::BLACK,
+    Color::BLACK,
+    Color::BLACK,
+    Color::WHITE,
+    Color::WHITE,
+    Color::WHITE,
+    Color::WHITE,
+    Color::WHITE,
+  ];
+  let pixel_buffer_width = 5u32;
+  let pixel_buffer_height = 5u32;
+
   'running: loop {
     let start_time = std::time::SystemTime::now();
     seconds_passed += delta_time.as_secs_f32();
@@ -113,15 +135,13 @@ pub fn main_loop(
     let view_width = helper::helper_ui::calculate_ui_element_width(0.80, canvas_size.0);
     let view_height = helper_ui::calculate_ui_element_height(sin_wave_abs, canvas_size.1);
 
-    for x in 0..view_width / current_rect.width() {
-      for y in 0..view_height / current_rect.height() {
-        let color_index = (x + y + 1) as usize % color_array.len();
-        canvas.set_draw_color(color_array[color_index]);
-        current_rect.set_x(x as i32 * current_rect.width() as i32);
-        current_rect.set_y(y as i32 * current_rect.height() as i32);
-        canvas.fill_rect(current_rect);
-      }
-    }
+    helper_canvas::help_render_pixel_buffer(
+      canvas,
+      &pixel_buffer,
+      (0, 0),
+      (5u32, 5u32),
+      Some((sin_wave_abs * 100.0) as u32 + 1),
+    );
 
     for event in event_pump.poll_iter() {
       match event {
