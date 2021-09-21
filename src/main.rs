@@ -90,24 +90,24 @@ pub fn main_loop(
 
   let pixel_buffer = [
     Color::BLUE,
-    Color::BLUE,
-    Color::BLUE,
-    Color::BLUE,
+    Color::RED,
     Color::BLUE,
     Color::RED,
+    Color::BLUE,
     Color::RED,
+    Color::BLUE,
     Color::RED,
+    Color::BLUE,
     Color::RED,
-    Color::RED,
-    Color::GREEN,
-    Color::GREEN,
-    Color::GREEN,
-    Color::GREEN,
     Color::GREEN,
     Color::BLACK,
+    Color::GREEN,
     Color::BLACK,
+    Color::GREEN,
     Color::BLACK,
+    Color::GREEN,
     Color::BLACK,
+    Color::GREEN,
     Color::BLACK,
     Color::WHITE,
     Color::WHITE,
@@ -123,24 +123,22 @@ pub fn main_loop(
     seconds_passed += delta_time.as_secs_f32();
 
     let sin_wave_abs = seconds_passed.sin().abs();
-    canvas.set_draw_color(Color::RGB(
-      (255 as f32 * sin_wave_abs) as u8,
-      64,
-      255 - (255 as f32 * sin_wave_abs) as u8,
-    ));
-
+    let cos_wave_abs = seconds_passed.cos().abs();
+    let sin_wave = seconds_passed.sin();
+    let canvas_size = canvas.logical_size();
+    // #B524BE purple
+    canvas.set_draw_color(Color::RGB(0xB5, 0x24, 0xBE));
     canvas.clear();
 
-    let canvas_size = canvas.logical_size();
-    let view_width = helper::helper_ui::calculate_ui_element_width(0.80, canvas_size.0);
-    let view_height = helper_ui::calculate_ui_element_height(sin_wave_abs, canvas_size.1);
-
-    helper_canvas::help_render_pixel_buffer(
+    helper_canvas::help_render_pixel_buffer_in_area(
+      (
+        helper_ui::calculate_ui_element_width(sin_wave_abs.clamp(0.01, 1.0), canvas_size.0),
+        100u32,
+      ),
       canvas,
       &pixel_buffer,
       (0, 0),
-      (5u32, 5u32),
-      Some((sin_wave_abs * 100.0) as u32 + 1),
+      (5, 5),
     );
 
     for event in event_pump.poll_iter() {
@@ -173,6 +171,7 @@ pub fn main_loop(
         _ => {}
       }
     }
+
     // The rest of the game loop goes here...
     canvas.present();
     ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
