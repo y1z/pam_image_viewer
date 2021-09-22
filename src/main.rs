@@ -1,10 +1,12 @@
 //extern crate sdl2;
 pub mod helper {
   pub mod helper_canvas;
+  pub mod helper_read_file;
   pub mod helper_ui;
 }
 
 use helper::helper_canvas::help_get_canvas_display_mode;
+use helper::helper_read_file as read_file;
 use helper::*;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -115,6 +117,8 @@ pub fn main_loop(
     Color::WHITE,
     Color::WHITE,
   ];
+
+  let res = read_file::convert_ppm_file_to_pixel_buffer(String::from("rainbow_rect.ppm"));
   let pixel_buffer_width = 5u32;
   let pixel_buffer_height = 5u32;
 
