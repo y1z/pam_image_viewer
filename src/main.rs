@@ -94,6 +94,8 @@ pub fn main_loop(
   'running: loop {
     let start_time = std::time::SystemTime::now();
     seconds_passed += delta_time.as_secs_f32();
+    let sin_wave = seconds_passed.sin();
+    let sin_wave_abs = sin_wave.abs();
     let canvas_size = canvas.logical_size();
     // #B524BE purple
     canvas.set_draw_color(Color::RGB(0xB5, 0x24, 0xBE));
@@ -101,8 +103,8 @@ pub fn main_loop(
 
     helper_canvas::help_render_pixel_buffer_in_area(
       (
-        helper_ui::calculate_ui_element_width(0.90, canvas_size.0),
-        200u32,
+        helper_ui::calculate_ui_element_width(sin_wave_abs.clamp(0.00001, 1.0), canvas_size.0),
+        helper_ui::calculate_ui_element_height(0.4f32, canvas_size.1),
       ),
       canvas,
       pixel_buffer.buffer.as_slice(),
