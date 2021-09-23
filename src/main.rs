@@ -85,50 +85,15 @@ pub fn main_loop(
   sdl_system: BasicSdlSystem,
   canvas: &mut sdl2::render::WindowCanvas,
 ) -> MainReturn {
-  let mut current_rect = Rect::new(0, 0, 10, 10);
   let mut event_pump = sdl_system.sdl_context.event_pump().unwrap();
   let mut delta_time = std::time::Duration::new(0, 0);
   let mut seconds_passed = delta_time.as_secs_f32();
 
-  let pixel_buffer = [
-    Color::BLUE,
-    Color::RED,
-    Color::BLUE,
-    Color::RED,
-    Color::BLUE,
-    Color::RED,
-    Color::BLUE,
-    Color::RED,
-    Color::BLUE,
-    Color::RED,
-    Color::GREEN,
-    Color::BLACK,
-    Color::GREEN,
-    Color::BLACK,
-    Color::GREEN,
-    Color::BLACK,
-    Color::GREEN,
-    Color::BLACK,
-    Color::GREEN,
-    Color::BLACK,
-    Color::WHITE,
-    Color::WHITE,
-    Color::WHITE,
-    Color::WHITE,
-    Color::WHITE,
-  ];
-
-  let res = read_file::convert_ppm_file_to_pixel_buffer(String::from("rainbow_rect.ppm"));
-  let pixel_buffer_width = 5u32;
-  let pixel_buffer_height = 5u32;
+  let pixel_buffer = read_file::convert_ppm_file_to_pixel_buffer(String::from("rainbow_rect.ppm"));
 
   'running: loop {
     let start_time = std::time::SystemTime::now();
     seconds_passed += delta_time.as_secs_f32();
-
-    let sin_wave_abs = seconds_passed.sin().abs();
-    let cos_wave_abs = seconds_passed.cos().abs();
-    let sin_wave = seconds_passed.sin();
     let canvas_size = canvas.logical_size();
     // #B524BE purple
     canvas.set_draw_color(Color::RGB(0xB5, 0x24, 0xBE));
@@ -136,35 +101,28 @@ pub fn main_loop(
 
     helper_canvas::help_render_pixel_buffer_in_area(
       (
-        helper_ui::calculate_ui_element_width(sin_wave_abs.clamp(0.01, 1.0), canvas_size.0),
-        100u32,
+        helper_ui::calculate_ui_element_width(0.90, canvas_size.0),
+        200u32,
       ),
       canvas,
-      &pixel_buffer,
+      pixel_buffer.buffer.as_slice(),
       (0, 0),
-      (5, 5),
+      (pixel_buffer.width, pixel_buffer.height),
     );
 
     for event in event_pump.poll_iter() {
       match event {
         Event::Quit { timestamp: u32 } => break 'running,
         Event::KeyDown {
-          timestamp,
-          window_id,
-          keycode,
-          scancode,
-          keymod,
-          repeat,
+          // timestamp,
+          // window_id,
+          // keycode,
+          // scancode,
+          // keymod,
+          // repeat,
           ..
         } => {}
         Event::Window { win_event, .. } => match win_event {
-          sdl2::event::WindowEvent::Resized(x, y) => {
-            let canvas_display_mode = help_get_canvas_display_mode(&canvas);
-            println!(
-              "\nDisplay_mode width [{}] and height [{}]\nResized width [{}] height [{}]",
-              canvas_display_mode.0, canvas_display_mode.1, x, y
-            );
-          }
           sdl2::event::WindowEvent::SizeChanged(x, y) => {
             canvas.set_logical_size(x as u32, y as u32);
             let size = canvas.logical_size();
