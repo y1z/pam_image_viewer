@@ -7,10 +7,11 @@
 /// ```
 pub fn calculate_size_of_percentage(percentage_of_size: f32, size_of_element: u32) -> u32 {
   assert!(
-    percentage_of_size < 1.0000001f32 && 0.000000f32 <= percentage_of_size,
+    percentage_of_size <= 1.0000001f32 && f32::EPSILON <= percentage_of_size,
     "desired percentage is out of range"
   );
-  (percentage_of_size * size_of_element as f32) as u32
+  let result: u32 = (percentage_of_size * size_of_element as f32) as u32;
+  result.clamp(1, u32::MAX)
 }
 
 /// Does the same as *[calculate_size_of_percentage]* this is just here for code clarity
