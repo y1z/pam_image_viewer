@@ -5,14 +5,10 @@ pub mod helper {
   pub mod helper_ui;
 }
 
-use helper::helper_canvas::help_get_canvas_display_mode;
 use helper::helper_read_file as read_file;
 use helper::*;
 use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
-use sdl2::rect::Rect;
-use sdl2::render::Canvas;
 use std::time::Duration;
 
 const DEFAULT_WIDTH: u32 = 800;
