@@ -4,7 +4,6 @@ use std::io::prelude::*;
 use std::io::BufReader;
 
 const PPM_FORMAT_EXTENTION: &'static str = ".ppm";
-const NUMBERS_STRING: &'static str = "0123456789";
 
 pub struct UnsignedNumberParseResult {
   number_parsed: Option<u32>,
@@ -33,7 +32,6 @@ pub fn convert_ppm_file_to_pixel_buffer(path_to_file: String) -> PixelBuffer {
     let has_read_successfully = reader.read_to_end(&mut buffer).is_ok();
 
     if has_read_successfully && buffer[0] == 'P' as u8 && buffer[1] == '6' as u8 {
-      let buffer_size = buffer.len();
       let mut buffer_index = 2;
 
       let width_height_maxval = parse_ppm_width_height_maxval(&buffer, &mut buffer_index);
@@ -72,7 +70,6 @@ fn parse_ppm_width_height_maxval(container: &Vec<u8>, index: &mut usize) -> [u32
   let mut result = [0u32, 0u32, 0u32];
 
   for x in 0..result.len() {
-    let mut number = 0;
     'find_numbers: loop {
       if container[*index].is_ascii_digit() {
         let parsing_result = parse_unsigned_numbers(container, index);
