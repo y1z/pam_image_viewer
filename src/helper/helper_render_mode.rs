@@ -23,12 +23,24 @@ pub struct RenderMode {
 }
 
 impl RenderMode {
-  const RGB_RENDER_MODE: RenderMode = RenderMode {
+  pub const RGB_RENDER_MODE: RenderMode = RenderMode {
     bit_mask: RenderModeBitMasks::RGB as u32,
   };
 
-  const RGBA_RENDER_MODE: RenderMode = RenderMode {
+  pub const RGBA_RENDER_MODE: RenderMode = RenderMode {
     bit_mask: RenderModeBitMasks::RGBA as u32,
+  };
+
+  pub const RED_RENDER_MODE: RenderMode = RenderMode {
+    bit_mask: RenderModeBitMasks::RED_ONLY as u32,
+  };
+
+  pub const GREEN_RENDER_MODE: RenderMode = RenderMode {
+    bit_mask: RenderModeBitMasks::GREEN_ONLY as u32,
+  };
+
+  pub const BLUE_RENDER_MODE: RenderMode = RenderMode {
+    bit_mask: RenderModeBitMasks::BLUE_ONLY as u32,
   };
 
   pub fn create(input_bit_mask: RenderModeBitMasks) -> RenderMode {

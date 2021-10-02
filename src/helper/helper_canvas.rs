@@ -1,4 +1,4 @@
-use crate::helper::helper_render_mode;
+use crate::helper::helper_render_mode::{filter_color, RenderMode};
 use sdl2::pixels::Color;
 
 pub fn help_get_canvas_display_mode(canvas: &sdl2::render::WindowCanvas) -> (i32, i32) {
@@ -19,6 +19,7 @@ pub fn help_render_pixel_buffer(
   top_left_position: (i32, i32),
   width_and_height_pixel_buffer: (u32, u32),
   scale_of_pixel: Option<(u32, u32)>,
+  render_mode: &RenderMode,
 ) {
   let final_scale_of_pixel = match scale_of_pixel {
     Some(x) => {
@@ -44,7 +45,7 @@ pub fn help_render_pixel_buffer(
       rect.set_x(initial_rect_position.0 + (final_scale_of_pixel.0 * x as u32) as i32);
       rect.set_y(initial_rect_position.1 + (final_scale_of_pixel.1 * y as u32) as i32);
 
-      canvas.set_draw_color(pixel_buffer[color_index]);
+      canvas.set_draw_color(filter_color(&pixel_buffer[color_index], &render_mode));
       canvas.fill_rect(rect);
     }
   }
@@ -56,6 +57,7 @@ pub fn help_render_pixel_buffer_in_area(
   pixel_buffer: &[Color],
   top_left_position: (i32, i32),
   width_and_height_pixel_buffer: (u32, u32),
+  render_mode: RenderMode,
 ) {
   assert_ne!(area.0, 0);
   assert_ne!(area.1, 0);
@@ -85,5 +87,6 @@ pub fn help_render_pixel_buffer_in_area(
     top_left_position,
     width_and_height_pixel_buffer,
     scale,
+    &render_mode,
   );
 }

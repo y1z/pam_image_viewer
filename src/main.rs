@@ -7,6 +7,7 @@ pub mod helper {
 }
 
 use helper::helper_read_file as read_file;
+use helper::helper_render_mode as render_mode;
 use helper::*;
 use sdl2::event::Event;
 use sdl2::pixels::Color;
@@ -113,6 +114,7 @@ pub fn main_loop(
       pixel_buffer.buffer.as_slice(),
       (0, 0),
       (pixel_buffer.width, pixel_buffer.height),
+      render_mode::RenderMode::RGB_RENDER_MODE,
     );
 
     for event in event_pump.poll_iter() {
