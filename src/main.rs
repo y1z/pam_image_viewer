@@ -2,6 +2,7 @@
 pub mod helper {
   pub mod helper_canvas;
   pub mod helper_read_file;
+  pub mod helper_render_mode;
   pub mod helper_ui;
 }
 
@@ -60,14 +61,20 @@ pub fn init_canvas(
   width: u32,
   height: u32,
 ) -> sdl2::render::WindowCanvas {
-  let mut res = window.into_canvas().build().unwrap();
-  res.set_logical_size(width, height);
-  return res;
+  let mut result = window.into_canvas().build().unwrap();
+  let possible_error = result.set_logical_size(width, height);
+  match possible_error {
+    Ok(x) => {}
+    Err(x) => {
+      panic!("SDL2 error : {}", x)
+    }
+  }
+  return result;
 }
 
 pub fn run() -> MainReturn {
   let mut basic_sdl_system = init_basic_sdl_system();
-  let mut window = init_window(
+  let window = init_window(
     &mut basic_sdl_system.video_subsystem,
     DEFAULT_WIDTH,
     DEFAULT_HEIGHT,

@@ -1,4 +1,6 @@
+use crate::helper::helper_render_mode;
 use sdl2::pixels::Color;
+
 pub fn help_get_canvas_display_mode(canvas: &sdl2::render::WindowCanvas) -> (i32, i32) {
   let display_mode_some = canvas.window().display_mode();
 
