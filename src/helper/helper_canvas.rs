@@ -19,7 +19,7 @@ pub fn help_render_pixel_buffer(
   top_left_position: (i32, i32),
   width_and_height_pixel_buffer: (u32, u32),
   scale_of_pixel: Option<(u32, u32)>,
-  render_mode: &RenderMode,
+  render_mode: Option<&RenderMode>,
 ) {
   let final_scale_of_pixel = match scale_of_pixel {
     Some(x) => {
@@ -36,6 +36,11 @@ pub fn help_render_pixel_buffer(
     final_scale_of_pixel.0,
     final_scale_of_pixel.1,
   );
+
+  let final_render_mode = match render_mode {
+    Some(x) => x,
+    None => &RenderMode::RGB_RENDER_MODE,
+  };
   let initial_rect_position = (rect.x(), rect.y());
   let width = width_and_height_pixel_buffer.0;
   let height = width_and_height_pixel_buffer.1;
@@ -45,7 +50,7 @@ pub fn help_render_pixel_buffer(
       rect.set_x(initial_rect_position.0 + (final_scale_of_pixel.0 * x as u32) as i32);
       rect.set_y(initial_rect_position.1 + (final_scale_of_pixel.1 * y as u32) as i32);
 
-      canvas.set_draw_color(filter_color(&pixel_buffer[color_index], &render_mode));
+      canvas.set_draw_color(filter_color(&pixel_buffer[color_index], final_render_mode));
       canvas.fill_rect(rect);
     }
   }
@@ -57,7 +62,7 @@ pub fn help_render_pixel_buffer_in_area(
   pixel_buffer: &[Color],
   top_left_position: (i32, i32),
   width_and_height_pixel_buffer: (u32, u32),
-  render_mode: RenderMode,
+  render_mode: Option<&RenderMode>,
 ) {
   assert_ne!(area.0, 0);
   assert_ne!(area.1, 0);
@@ -81,12 +86,17 @@ pub fn help_render_pixel_buffer_in_area(
 
   let scale = Some((scale_x, scale_y));
 
+  let final_render_mode = match render_mode {
+    Some(x) => x,
+    None => &RenderMode::RGB_RENDER_MODE,
+  };
+
   help_render_pixel_buffer(
     canvas,
     pixel_buffer,
     top_left_position,
     width_and_height_pixel_buffer,
     scale,
-    &render_mode,
+    Some(final_render_mode),
   );
 }
