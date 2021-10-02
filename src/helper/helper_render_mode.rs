@@ -1,3 +1,4 @@
+use sdl2::pixels::Color;
 use std::ops::{BitAnd, BitOr};
 
 #[allow(non_camel_case_types)]
@@ -24,6 +25,10 @@ pub struct RenderMode {
 impl RenderMode {
   const RGB_RENDER_MODE: RenderMode = RenderMode {
     bit_mask: RenderModeBitMasks::RGB as u32,
+  };
+
+  const RGBA_RENDER_MODE: RenderMode = RenderMode {
+    bit_mask: RenderModeBitMasks::RGBA as u32,
   };
 
   pub fn create(input_bit_mask: RenderModeBitMasks) -> RenderMode {
@@ -61,4 +66,36 @@ impl BitAnd for RenderModeBitMasks {
   fn bitand(self, rhs: Self) -> Self::Output {
     (self as u32 & rhs as u32) > 0
   }
+}
+
+pub fn filter_color(original_color: &Color, render_mode: &RenderMode) -> Color {
+  if RenderMode::RGB_RENDER_MODE == *render_mode {
+    return Color::from((original_color.r, original_color.g, original_color.b));
+  } else if RenderMode::RGBA_RENDER_MODE == *render_mode {
+    return Color::from((
+      original_color.r,
+      original_color.g,
+      original_color.b,
+      original_color.a,
+    ));
+  }
+
+  let mut result: Color = Color::from((0, 0, 0));
+  if render_mode.has_bitmask(RenderModeBitMasks::RED_ONLY) {
+    result.r = original_color.r
+  }
+
+  if render_mode.has_bitmask(RenderModeBitMasks::GREEN_ONLY) {
+    result.g = original_color.g
+  }
+
+  if render_mode.has_bitmask(RenderModeBitMasks::BLUE_ONLY) {
+    result.b = original_color.b
+  }
+
+  if render_mode.has_bitmask(RenderModeBitMasks::ALPHA_ONLY) {
+    result.a = original_color.a
+  }
+
+  result
 }
