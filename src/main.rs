@@ -114,7 +114,10 @@ pub fn main_loop(
       pixel_buffer.buffer.as_slice(),
       (0, 0),
       (pixel_buffer.width, pixel_buffer.height),
-      render_mode::RenderMode::RGB_RENDER_MODE,
+      render_mode::RenderMode::from(
+        render_mode::RenderModeBitMasks::BLUE_ONLY as u32
+          | render_mode::RenderModeBitMasks::GREEN_ONLY as u32,
+      ),
     );
 
     for event in event_pump.poll_iter() {
