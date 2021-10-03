@@ -7,7 +7,7 @@ pub mod helper {
 }
 
 use helper::helper_read_file as read_file;
-use helper::helper_render_mode as render_mode;
+use helper::helper_render_mode::{RenderMode, RenderModeBitMasks};
 use helper::*;
 use sdl2::event::Event;
 use sdl2::pixels::Color;
@@ -94,13 +94,14 @@ pub fn main_loop(
   let mut seconds_passed = delta_time.as_secs_f32();
 
   let pixel_buffer = read_file::convert_ppm_file_to_pixel_buffer(String::from("rainbow_rect.ppm"));
-
+  let render_mode = RenderMode::from(RenderModeBitMasks::RGBA as u32);
   'running: loop {
     let start_time = std::time::SystemTime::now();
     seconds_passed += delta_time.as_secs_f32();
     let sin_wave = seconds_passed.sin();
     let sin_wave_abs = sin_wave.abs();
     let canvas_size = canvas.logical_size();
+
     // #B524BE purple
     canvas.set_draw_color(Color::RGB(0xB5, 0x24, 0xBE));
     canvas.clear();
@@ -114,7 +115,7 @@ pub fn main_loop(
       pixel_buffer.buffer.as_slice(),
       (0, 0),
       (pixel_buffer.width, pixel_buffer.height),
-      None,
+      Some(&render_mode),
     );
 
     for event in event_pump.poll_iter() {
