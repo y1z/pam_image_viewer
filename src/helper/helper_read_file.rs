@@ -44,7 +44,7 @@ pub fn convert_ppm_file_to_pixel_buffer(path_to_file: String) -> PixelBuffer {
       result_width = width_height_maxval[0];
       result_height = width_height_maxval[1];
 
-      result = parse_RGB_data(
+      result = parse_ppm_RGB_data(
         result_width,
         result_height,
         width_height_maxval[2],
@@ -119,7 +119,7 @@ pub fn parse_unsigned_numbers(container: &Vec<u8>, index: &mut usize) -> Unsigne
   }
 }
 
-fn parse_RGB_data(
+fn parse_ppm_RGB_data(
   width: u32,
   height: u32,
   max_val: u32,
