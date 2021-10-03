@@ -14,7 +14,6 @@ pub enum RenderModeBitMasks {
     | RenderModeBitMasks::GREEN_ONLY as u32
     | RenderModeBitMasks::BLUE_ONLY as u32,
   RGBA = RenderModeBitMasks::RGB as u32 | RenderModeBitMasks::ALPHA_ONLY as u32,
-  GRAY_SCALE = (1 << 8),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
