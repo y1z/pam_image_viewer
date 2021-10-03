@@ -57,8 +57,7 @@ impl RenderMode {
 
 impl From<u32> for RenderMode {
   fn from(input_value: u32) -> Self {
-    let is_valid_bitmask = (input_value & RenderModeBitMasks::RGBA as u32) > 0
-      || (input_value & RenderModeBitMasks::GRAY_SCALE as u32) > 0;
+    let is_valid_bitmask = (input_value & RenderModeBitMasks::RGBA as u32) > 0;
 
     if is_valid_bitmask {
       return RenderMode {
