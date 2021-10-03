@@ -93,10 +93,7 @@ pub fn parse_unsigned_numbers(container: &Vec<u8>, index: &mut usize) -> Unsigne
 
   'git_digits: loop {
     let current_value = container[*index];
-    let continue_parsing = match current_value.is_ascii_digit() {
-      true => true,
-      false => false,
-    };
+    let continue_parsing = current_value.is_ascii_digit();
     if !continue_parsing {
       break 'git_digits;
     } else {
