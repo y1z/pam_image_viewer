@@ -1,6 +1,7 @@
 //extern crate sdl2;
 pub mod helper {
   pub mod helper_canvas;
+  pub mod helper_pam_header;
   pub mod helper_read_file;
   pub mod helper_render_mode;
   pub mod helper_ui;
