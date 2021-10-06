@@ -1,3 +1,17 @@
+/**
+*  Example header from : http://netpbm.sourceforge.net/doc/pam.html#layout
+P7
+WIDTH 227
+HEIGHT 149
+DEPTH 3
+MAXVAL 255
+TUPLTYPE RGB
+ENDHDR
+*/
+pub const PAM_HEADER_EXPECTED_STRS: [&'static str; 7] = [
+  "P7", "WIDTH", "HEIGHT", "DEPTH", "MAXVAL", "TUPLTYPE", "ENDHDR",
+];
+
 /// enum are based on this http://netpbm.sourceforge.net/doc/pam.html#tupletype
 #[allow(non_camel_case_types)]
 #[repr(u32)]
