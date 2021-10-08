@@ -8,8 +8,41 @@ MAXVAL 255
 TUPLTYPE RGB
 ENDHDR
 */
-pub const PAM_HEADER_EXPECTED_STRS: [&'static str; 7] = [
-  "P7", "WIDTH", "HEIGHT", "DEPTH", "MAXVAL", "TUPLTYPE", "ENDHDR",
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ParseOrFindMethod {
+  FIND_START = 0,
+  PARSE_NUMBER = 1,
+  PARSE_STRING,
+  FIND_END,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct StringAndMethod {
+  pub string: &'static str,
+  pub parse_method: ParseOrFindMethod,
+}
+
+impl StringAndMethod {
+  pub const fn from(
+    string_input: &'static str,
+    parse_method_input: ParseOrFindMethod,
+  ) -> StringAndMethod {
+    StringAndMethod {
+      string: string_input,
+      parse_method: parse_method_input,
+    }
+  }
+}
+
+pub const PAM_HEADER_EXPECTED_STRS_METHODS: [StringAndMethod; 7] = [
+  StringAndMethod::from("P7", ParseOrFindMethod::FIND_START),
+  StringAndMethod::from("WIDTH", ParseOrFindMethod::PARSE_NUMBER),
+  StringAndMethod::from("HEIGHT", ParseOrFindMethod::PARSE_NUMBER),
+  StringAndMethod::from("DEPTH", ParseOrFindMethod::PARSE_NUMBER),
+  StringAndMethod::from("MAXVAL", ParseOrFindMethod::PARSE_NUMBER),
+  StringAndMethod::from("TUPLTYPE", ParseOrFindMethod::PARSE_STRING),
+  StringAndMethod::from("ENDHDR", ParseOrFindMethod::FIND_END),
 ];
 
 /// enum are based on this http://netpbm.sourceforge.net/doc/pam.html#tupletype
@@ -27,6 +60,12 @@ pub enum TupleTypes {
   ALPHA = (1 << 31),
 }
 
+impl TupleTypes {
+  pub const fn get_value(&self) -> u32 {
+    *self as u32
+  }
+}
+
 impl std::fmt::Display for TupleTypes {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     write!(f, "{:?}", self)
@@ -36,9 +75,9 @@ impl std::fmt::Display for TupleTypes {
 /// Used to know how the data of the .pam file is organized.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PamHeader {
-  height: u32,
-  width: u32,
-  depth: u32,
-  max_val: u16,
-  tuple_types: TupleTypes,
+  pub height: u32,
+  pub width: u32,
+  pub depth: u32,
+  pub max_val: u16,
+  pub tuple_types: TupleTypes,
 }
