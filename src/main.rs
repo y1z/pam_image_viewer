@@ -9,6 +9,7 @@ pub mod helper {
   pub mod helper_ui;
 }
 
+use helper::helper_consts::DEMO_PPM_FILE;
 use helper::helper_read_file as read_file;
 use helper::helper_render_mode::{RenderMode, RenderModeBitMasks};
 use helper::*;
@@ -96,7 +97,12 @@ pub fn main_loop(
   let mut delta_time = std::time::Duration::new(0, 0);
   let mut seconds_passed = delta_time.as_secs_f32();
 
-  let pixel_buffer = read_file::convert_ppm_file_to_pixel_buffer(String::from("rainbow_rect.ppm"));
+  let temp = read_file::convert_ppm_file_to_pixel_buffer(String::from(DEMO_PPM_FILE));
+  let pixel_buffer = match temp {
+    Some(x) => x,
+    None => panic!("could not create pixel buffer from {}", DEMO_PPM_FILE),
+  };
+
   let render_mode = RenderMode::from(RenderModeBitMasks::RGBA as u32);
   'running: loop {
     let start_time = std::time::SystemTime::now();
