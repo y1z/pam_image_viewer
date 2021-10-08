@@ -64,6 +64,21 @@ impl TupleTypes {
   pub const fn get_value(&self) -> u32 {
     *self as u32
   }
+
+  pub fn iterator() -> impl Iterator<Item = TupleTypes> {
+    [
+      TupleTypes::UNDEFINED,
+      TupleTypes::BLACKANDWHITE,
+      TupleTypes::GRAYSCALE,
+      TupleTypes::RGB,
+      TupleTypes::BLACKANDWHITE_ALPHA,
+      TupleTypes::GRAYSCALE_ALPHA,
+      TupleTypes::GRAYSCALE_ALPHA,
+      TupleTypes::RGB_ALPHA,
+    ]
+    .iter()
+    .copied()
+  }
 }
 
 impl std::fmt::Display for TupleTypes {
