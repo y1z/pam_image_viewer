@@ -165,25 +165,61 @@ pub fn parse_pam_header(buffer: &String) -> Option<PamHeader> {
     (false, strs_methods[6]),
   ];
 
+  let get_value_from_line = |line: &str| -> u32 {
+    let mut res = 1u32;
+    if let Some(digit_index) = line.find(|c: char| c.is_ascii_digit()) {
+      let mut mut_digit_index = digit_index;
+      let result = parse_unsigned_numbers(line.as_bytes(), &mut mut_digit_index);
+      res = result.number_parsed.unwrap();
+    }
+    res
+  };
+
   let mut width_res: u32 = 1;
   let mut height_res: u32 = 1;
   let mut depth_res: u32 = 1;
   let mut max_val_res: u16 = 1;
   let mut tuple_type_res: TupleTypes = TupleTypes::UNDEFINED;
+  let mut found_index = 0;
+
   for line in buffer.lines() {
+    if !(found_index < strs_methods.len()) {
+      break;
+    }
     for string in found_and_parsed_strings.iter_mut() {
       let string_and_method = string.1;
       let find_string = line.find(string_and_method.string);
+
       if !string.0 && find_string.is_some() {
         string.0 = true;
+        found_index = found_index + 1;
+
         match string_and_method.parse_method {
-          ParseOrFindMethod::FIND_START => {}
-          ParseOrFindMethod::FIND_END => {}
-          ParseOrFindMethod::PARSE_STRING => {}
-          ParseOrFindMethod::PARSE_NUMBER => {
-            if let Some(digit_index) = line.find(|c: char| c.is_ascii_digit()) {
-              let mut mut_digit_index = digit_index;
-              parse_unsigned_numbers(line.as_bytes(), &mut mut_digit_index);
+          ParseOrFindMethod::FIND_START | ParseOrFindMethod::FIND_END => {}
+          ParseOrFindMethod::PARSE_WIDTH => {
+            width_res = get_value_from_line(line);
+          }
+          ParseOrFindMethod::PARSE_DEPTH => {
+            depth_res = get_value_from_line(line);
+          }
+          ParseOrFindMethod::PARSE_HEIGHT => {
+            height_res = get_value_from_line(line);
+          }
+          ParseOrFindMethod::PARSE_MAXVAL => {
+            let temp = get_value_from_line(line);
+            if temp > (u16::MAX - 1) as u32 {
+              panic!(
+                "Value of MAXVAL cannot be bigger than {} and it's {} ",
+                (u16::MAX - 1),
+                temp
+              );
+            }
+            max_val_res = temp as u16;
+          }
+          ParseOrFindMethod::PARSE_TUPLTYPE => {
+            if let Some(start_index) = line.find(|c: char| c.is_ascii_digit()) {
+              let mut start_index_mut = start_index;
+              tuple_type_res = parse_tuple_type(&String::from(line), &mut start_index_mut);
             }
           }
         }
@@ -209,4 +245,23 @@ pub fn parse_pam_header(buffer: &String) -> Option<PamHeader> {
     max_val: max_val_res,
     tuple_types: tuple_type_res,
   })
+}
+
+fn parse_tuple_type(container: &String, starting_index: &mut usize) -> TupleTypes {
+  let space_separated_words: Vec<_> = container
+    .split(|c: char| c == '\n' || c == ' ')
+    .filter(|x| *x != "TUPLTYPE")
+    .collect();
+  let mut result = TupleTypes::UNDEFINED;
+
+  'check_word: for word in space_separated_words {
+    for tuple_type in TupleTypes::iterator() {
+      if tuple_type.to_string() == word {
+        result = tuple_type;
+        break 'check_word;
+      }
+    }
+  }
+
+  result
 }

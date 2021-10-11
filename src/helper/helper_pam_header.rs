@@ -12,8 +12,11 @@ ENDHDR
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ParseOrFindMethod {
   FIND_START = 0,
-  PARSE_NUMBER = 1,
-  PARSE_STRING,
+  PARSE_WIDTH,
+  PARSE_HEIGHT,
+  PARSE_DEPTH,
+  PARSE_MAXVAL,
+  PARSE_TUPLTYPE,
   FIND_END,
 }
 
@@ -37,11 +40,11 @@ impl StringAndMethod {
 
 pub const PAM_HEADER_EXPECTED_STRS_METHODS: [StringAndMethod; 7] = [
   StringAndMethod::from("P7", ParseOrFindMethod::FIND_START),
-  StringAndMethod::from("WIDTH", ParseOrFindMethod::PARSE_NUMBER),
-  StringAndMethod::from("HEIGHT", ParseOrFindMethod::PARSE_NUMBER),
-  StringAndMethod::from("DEPTH", ParseOrFindMethod::PARSE_NUMBER),
-  StringAndMethod::from("MAXVAL", ParseOrFindMethod::PARSE_NUMBER),
-  StringAndMethod::from("TUPLTYPE", ParseOrFindMethod::PARSE_STRING),
+  StringAndMethod::from("WIDTH", ParseOrFindMethod::PARSE_WIDTH),
+  StringAndMethod::from("HEIGHT", ParseOrFindMethod::PARSE_HEIGHT),
+  StringAndMethod::from("DEPTH", ParseOrFindMethod::PARSE_DEPTH),
+  StringAndMethod::from("MAXVAL", ParseOrFindMethod::PARSE_MAXVAL),
+  StringAndMethod::from("TUPLTYPE", ParseOrFindMethod::PARSE_TUPLTYPE),
   StringAndMethod::from("ENDHDR", ParseOrFindMethod::FIND_END),
 ];
 
