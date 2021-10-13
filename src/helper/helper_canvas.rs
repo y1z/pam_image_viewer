@@ -30,6 +30,8 @@ pub fn help_render_pixel_buffer(
     _ => (1u32, 1u32),
   };
 
+  let pixel_buffer_len = pixel_buffer.len();
+
   let mut rect = sdl2::rect::Rect::new(
     top_left_position.0,
     top_left_position.1,
@@ -42,11 +44,11 @@ pub fn help_render_pixel_buffer(
     None => &RenderMode::RGB_RENDER_MODE,
   };
   let initial_rect_position = (rect.x(), rect.y());
-  let width = width_and_height_pixel_buffer.0;
-  let height = width_and_height_pixel_buffer.1;
-  for y in 0usize..height as usize {
-    for x in 0usize..width as usize {
-      let color_index = (width as usize * y) + x;
+  let width = width_and_height_pixel_buffer.0 as usize;
+  let height = width_and_height_pixel_buffer.1 as usize;
+  for y in 0usize..height {
+    for x in 0usize..width - 1 {
+      let color_index = (width * y) + x;
       rect.set_x(initial_rect_position.0 + (final_scale_of_pixel.0 * x as u32) as i32);
       rect.set_y(initial_rect_position.1 + (final_scale_of_pixel.1 * y as u32) as i32);
 

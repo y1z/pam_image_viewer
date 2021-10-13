@@ -97,13 +97,15 @@ pub fn main_loop(
   let mut delta_time = std::time::Duration::new(0, 0);
   let mut seconds_passed = delta_time.as_secs_f32();
 
+  //let pam_pixle_buffer = read_file::convert_pam_file_to_pixel_buffer(String::from("filename0.pam"));
+
   let temp = read_file::convert_ppm_file_to_pixel_buffer(String::from(DEMO_PPM_FILE));
   let pixel_buffer = match temp {
     Some(x) => x,
     None => panic!("could not create pixel buffer from {}", DEMO_PPM_FILE),
   };
 
-  let render_mode = RenderMode::from(RenderModeBitMasks::RGBA as u32);
+  let render_mode = RenderMode::from(RenderModeBitMasks::RGB as u32);
   'running: loop {
     let start_time = std::time::SystemTime::now();
     seconds_passed += delta_time.as_secs_f32();
@@ -117,8 +119,8 @@ pub fn main_loop(
 
     helper_canvas::help_render_pixel_buffer_in_area(
       (
-        helper_ui::calculate_ui_element_width(sin_wave_abs.clamp(0.00001, 1.0), canvas_size.0),
-        helper_ui::calculate_ui_element_height(0.4f32, canvas_size.1),
+        helper_ui::calculate_ui_element_width(sin_wave_abs.clamp(0.0001, 1.0), canvas_size.0),
+        helper_ui::calculate_ui_element_height(0.6f32, canvas_size.1),
       ),
       canvas,
       pixel_buffer.buffer.as_slice(),

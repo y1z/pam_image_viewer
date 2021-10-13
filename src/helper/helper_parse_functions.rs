@@ -33,7 +33,7 @@ pub fn parse_ppm_width_height_maxval(container: &Vec<u8>, index: &mut usize) -> 
     }
   }
   // skip empty space
-  *index += 1;
+  //*index += 1;
 
   result
 }
@@ -49,16 +49,23 @@ pub fn parse_unsigned_numbers(container: &[u8], index: &mut usize) -> UnsignedNu
 
   let mut individual_digits: [u8; 10] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   let mut digit_index: usize = 0;
+  let container_len = container.len();
+  let mut continue_parsing = true;
 
-  'git_digits: loop {
-    let current_value = container[*index];
-    let continue_parsing = current_value.is_ascii_digit();
-    if !continue_parsing {
-      break 'git_digits;
+  while continue_parsing {
+    let is_in_range = *index < container_len;
+
+    if is_in_range {
+      continue_parsing = container[*index].is_ascii_digit();
+
+      if continue_parsing {
+        let current_value = container[*index];
+        let value_of_digit = current_value - '0' as u8;
+        individual_digits[digit_index] = value_of_digit;
+        digit_index += 1;
+      }
     } else {
-      let value_of_digit = current_value - '0' as u8;
-      individual_digits[digit_index] = value_of_digit;
-      digit_index += 1;
+      continue_parsing = false;
     }
 
     *index += 1usize;
@@ -151,7 +158,7 @@ fn parse_ppm_RGB_data(
 
 /// extracts the data of the pam header : http://netpbm.sourceforge.net/doc/pam.html#layout
 /// It's assumed to be at the start of the .pam file
-pub fn parse_pam_header(buffer: &String) -> Option<PamHeader> {
+pub fn parse_pam_header(buffer: BufReader<File>) -> Option<PamHeader> {
   // string and the mothod needed to parse them
   let strs_methods = &PAM_HEADER_EXPECTED_STRS_METHODS;
   // keeps track of which string was already parsed
@@ -182,31 +189,40 @@ pub fn parse_pam_header(buffer: &String) -> Option<PamHeader> {
   let mut tuple_type_res: TupleTypes = TupleTypes::UNDEFINED;
   let mut found_index = 0;
 
-  for line in buffer.lines() {
+  'get_every_line: for line in buffer.lines() {
     if !(found_index < strs_methods.len()) {
       break;
     }
+    let raw_line = match line {
+      Ok(ref x) => x,
+      Err(x) => panic!("\n\n\n\n---------------------------\nerror is : {}\n\n", x),
+    };
+    println!("{}", raw_line);
     for string in found_and_parsed_strings.iter_mut() {
       let string_and_method = string.1;
-      let find_string = line.find(string_and_method.string);
+
+      let find_string = raw_line.find(string_and_method.string);
 
       if !string.0 && find_string.is_some() {
         string.0 = true;
         found_index = found_index + 1;
 
         match string_and_method.parse_method {
-          ParseOrFindMethod::FIND_START | ParseOrFindMethod::FIND_END => {}
+          ParseOrFindMethod::FIND_START => {}
+          ParseOrFindMethod::FIND_END => {
+            break 'get_every_line;
+          }
           ParseOrFindMethod::PARSE_WIDTH => {
-            width_res = get_value_from_line(line);
+            width_res = get_value_from_line(&raw_line);
           }
           ParseOrFindMethod::PARSE_DEPTH => {
-            depth_res = get_value_from_line(line);
+            depth_res = get_value_from_line(&raw_line);
           }
           ParseOrFindMethod::PARSE_HEIGHT => {
-            height_res = get_value_from_line(line);
+            height_res = get_value_from_line(&raw_line);
           }
           ParseOrFindMethod::PARSE_MAXVAL => {
-            let temp = get_value_from_line(line);
+            let temp = get_value_from_line(&raw_line);
             if temp > (u16::MAX - 1) as u32 {
               panic!(
                 "Value of MAXVAL cannot be bigger than {} and it's {} ",
@@ -217,9 +233,9 @@ pub fn parse_pam_header(buffer: &String) -> Option<PamHeader> {
             max_val_res = temp as u16;
           }
           ParseOrFindMethod::PARSE_TUPLTYPE => {
-            if let Some(start_index) = line.find(|c: char| c.is_ascii_digit()) {
+            if let Some(start_index) = raw_line.find(|c: char| c.is_ascii_digit()) {
               let mut start_index_mut = start_index;
-              tuple_type_res = parse_tuple_type(&String::from(line), &mut start_index_mut);
+              tuple_type_res = parse_tuple_type(&String::from(raw_line), &mut start_index_mut);
             }
           }
         }
