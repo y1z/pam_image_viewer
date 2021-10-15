@@ -93,6 +93,7 @@ impl std::fmt::Display for TupleTypes {
 /// Used to know how the data of the .pam file is organized.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PamHeader {
+  pub past_end_header_index: usize,
   pub height: u32,
   pub width: u32,
   pub depth: u32,

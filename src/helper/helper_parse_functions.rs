@@ -4,6 +4,7 @@ use sdl2::pixels::Color;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
+use std::rc::Rc;
 
 #[derive(Debug, Clone, Copy)]
 pub struct UnsignedNumberParseResult {
@@ -158,7 +159,7 @@ fn parse_ppm_RGB_data(
 
 /// extracts the data of the pam header : http://netpbm.sourceforge.net/doc/pam.html#layout
 /// It's assumed to be at the start of the .pam file
-pub fn parse_pam_header(buffer: BufReader<File>) -> Option<PamHeader> {
+pub fn parse_pam_header(buffer: &mut BufReader<File>) -> Option<PamHeader> {
   // string and the mothod needed to parse them
   let strs_methods = &PAM_HEADER_EXPECTED_STRS_METHODS;
   // keeps track of which string was already parsed
@@ -187,42 +188,49 @@ pub fn parse_pam_header(buffer: BufReader<File>) -> Option<PamHeader> {
   let mut depth_res: u32 = 1;
   let mut max_val_res: u16 = 1;
   let mut tuple_type_res: TupleTypes = TupleTypes::UNDEFINED;
-  let mut found_index = 0;
+  let mut found_count: usize = 0;
+  let mut past_end_header_index_res: usize = 0;
 
-  'get_every_line: for line in buffer.lines() {
-    if !(found_index < strs_methods.len()) {
-      break;
+  'get_every_line: loop {
+    if !(found_count < strs_methods.len()) {
+      break 'get_every_line;
     }
-    let raw_line = match line {
-      Ok(ref x) => x,
-      Err(x) => panic!("\n\n\n\n---------------------------\nerror is : {}\n\n", x),
-    };
-    println!("{}", raw_line);
-    for string in found_and_parsed_strings.iter_mut() {
-      let string_and_method = string.1;
 
-      let find_string = raw_line.find(string_and_method.string);
+    let mut string_line = String::new();
+    let line_count = buffer.read_line(&mut string_line);
+    let string_clone = String::from(string_line.as_str());
+    let raw_line_count = match line_count {
+      Ok(x) => x,
+      Err(x) => panic!("\n-------------------\n The error is [{}]", x),
+    };
+
+    past_end_header_index_res = past_end_header_index_res + raw_line_count;
+    for string in found_and_parsed_strings.iter_mut() {
+      let find_string = string_clone.find(string.1.string);
 
       if !string.0 && find_string.is_some() {
         string.0 = true;
-        found_index = found_index + 1;
+        found_count = found_count + 1;
+        let string_and_method = string.1;
 
         match string_and_method.parse_method {
-          ParseOrFindMethod::FIND_START => {}
-          ParseOrFindMethod::FIND_END => {
-            break 'get_every_line;
+          ParseOrFindMethod::FIND_START | ParseOrFindMethod::FIND_END => {
+            break;
           }
           ParseOrFindMethod::PARSE_WIDTH => {
-            width_res = get_value_from_line(&raw_line);
+            width_res = get_value_from_line(&string_line);
+            break;
           }
           ParseOrFindMethod::PARSE_DEPTH => {
-            depth_res = get_value_from_line(&raw_line);
+            depth_res = get_value_from_line(&string_line);
+            break;
           }
           ParseOrFindMethod::PARSE_HEIGHT => {
-            height_res = get_value_from_line(&raw_line);
+            height_res = get_value_from_line(&string_line);
+            break;
           }
           ParseOrFindMethod::PARSE_MAXVAL => {
-            let temp = get_value_from_line(&raw_line);
+            let temp = get_value_from_line(&string_line);
             if temp > (u16::MAX - 1) as u32 {
               panic!(
                 "Value of MAXVAL cannot be bigger than {} and it's {} ",
@@ -231,12 +239,11 @@ pub fn parse_pam_header(buffer: BufReader<File>) -> Option<PamHeader> {
               );
             }
             max_val_res = temp as u16;
+            break;
           }
           ParseOrFindMethod::PARSE_TUPLTYPE => {
-            if let Some(start_index) = raw_line.find(|c: char| c.is_ascii_digit()) {
-              let mut start_index_mut = start_index;
-              tuple_type_res = parse_tuple_type(&String::from(raw_line), &mut start_index_mut);
-            }
+            tuple_type_res = parse_tuple_type(&String::from(string_clone.as_str()));
+            break;
           }
         }
       }
@@ -255,6 +262,7 @@ pub fn parse_pam_header(buffer: BufReader<File>) -> Option<PamHeader> {
   }
 
   Some(PamHeader {
+    past_end_header_index: past_end_header_index_res,
     height: height_res,
     width: width_res,
     depth: depth_res,
@@ -263,7 +271,7 @@ pub fn parse_pam_header(buffer: BufReader<File>) -> Option<PamHeader> {
   })
 }
 
-fn parse_tuple_type(container: &String, starting_index: &mut usize) -> TupleTypes {
+fn parse_tuple_type(container: &String) -> TupleTypes {
   let space_separated_words: Vec<_> = container
     .split(|c: char| c == '\n' || c == ' ')
     .filter(|x| *x != "TUPLTYPE")
@@ -280,4 +288,68 @@ fn parse_tuple_type(container: &String, starting_index: &mut usize) -> TupleType
   }
 
   result
+}
+
+pub fn parse_pam_data(
+  pam_header: PamHeader,
+  pam_data: &mut BufReader<File>,
+) -> Option<PixelBuffer> {
+  let tuple_type_string = pam_header.tuple_types.to_string();
+  pam_data.seek(std::io::SeekFrom::Start(0));
+  /**
+  UNDEFINED = 0,
+  BLACKANDWHITE = 1,
+  GRAYSCALE = 2,
+  RGB = 4,
+  BLACKANDWHITE_ALPHA = TupleTypes::BLACKANDWHITE as u32 | TupleTypes::ALPHA as u32,
+  GRAYSCALE_ALPHA = TupleTypes::GRAYSCALE as u32 | TupleTypes::ALPHA as u32,
+  RGB_ALPHA = TupleTypes::RGB as u32 | TupleTypes::ALPHA as u32,
+  ALPHA = (1 << 31),
+   *
+  */
+  let result = match tuple_type_string.as_str() {
+    "RGB" => Some(parse_RGB_pam_data(pam_header, pam_data)),
+
+    _ => None,
+  };
+
+  result
+}
+
+// TODO : update this to work with 16-bit values
+fn parse_RGB_pam_data(pam_header: PamHeader, pam_data: &mut BufReader<File>) -> PixelBuffer {
+  let mut buffer: Vec<u8> = vec![];
+  if let Err(error_type) = pam_data.read_to_end(&mut buffer) {
+    panic!("\n------------------\n the error is [{}]", error_type);
+  }
+  let capacity = (pam_header.width * pam_header.height) as usize;
+  let mut result: Vec<Color> = Vec::<Color>::with_capacity(capacity);
+  result.resize_with(capacity, || Color::from((0u8, 0u8, 0u8)));
+  // Note : remove variable past_end_header_index because for some reason
+  let starting_index = pam_header.past_end_header_index;
+
+  for z in 0..pam_header.depth {
+    for y in 0..pam_header.height {
+      for x in 0..pam_header.width {
+        let current_row = (y * pam_header.width) as usize;
+        let current_index = starting_index
+          + (z as usize * (pam_header.width * pam_header.height) as usize)
+          + current_row as usize
+          + x as usize;
+        match z {
+          0 => result[current_row + x as usize].r = buffer[current_index],
+          1 => result[current_row + x as usize].g = buffer[current_index],
+          2 => result[current_row + x as usize].b = buffer[current_index],
+          3 => result[current_row + x as usize].a = buffer[current_index],
+          _ => {}
+        }
+      }
+    }
+  }
+
+  PixelBuffer {
+    buffer: result,
+    width: pam_header.width,
+    height: pam_header.height,
+  }
 }

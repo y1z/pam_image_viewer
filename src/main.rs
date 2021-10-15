@@ -97,15 +97,21 @@ pub fn main_loop(
   let mut delta_time = std::time::Duration::new(0, 0);
   let mut seconds_passed = delta_time.as_secs_f32();
 
-  //let pam_pixle_buffer = read_file::convert_pam_file_to_pixel_buffer(String::from("filename0.pam"));
+  let some_pixel_buffer =
+    read_file::convert_pam_file_to_pixel_buffer(String::from("filename0.pam"));
 
-  let temp = read_file::convert_ppm_file_to_pixel_buffer(String::from(DEMO_PPM_FILE));
-  let pixel_buffer = match temp {
+  let pixel_buffer = match some_pixel_buffer {
     Some(x) => x,
-    None => panic!("could not create pixel buffer from {}", DEMO_PPM_FILE),
+    None => panic!("failed to crate pixel buffer"),
   };
 
-  let render_mode = RenderMode::from(RenderModeBitMasks::RGB as u32);
+  // let temp = read_file::convert_ppm_file_to_pixel_buffer(String::from(DEMO_PPM_FILE));
+  // let pixel_buffer = match temp {
+  //   Some(x) => x,
+  //   None => panic!("could not create pixel buffer from {}", DEMO_PPM_FILE),
+  // };
+
+  let mut render_mode = RenderMode::from(RenderModeBitMasks::RGB as u32);
   'running: loop {
     let start_time = std::time::SystemTime::now();
     seconds_passed += delta_time.as_secs_f32();
@@ -135,12 +141,26 @@ pub fn main_loop(
         Event::KeyDown {
           // timestamp,
           // window_id,
-          // keycode,
+          keycode,
           // scancode,
           // keymod,
           // repeat,
           ..
-        } => {}
+        } => {
+          if let Some(raw_keycode) = keycode {
+            if sdl2::keyboard::Keycode::Num1 == raw_keycode {
+              render_mode = RenderMode::from(RenderModeBitMasks::RED_ONLY as u32);
+            } else if sdl2::keyboard::Keycode::Num2 == raw_keycode {
+              render_mode = RenderMode::from(RenderModeBitMasks::GREEN_ONLY as u32);
+            } else if sdl2::keyboard::Keycode::Num3 == raw_keycode {
+              render_mode = RenderMode::from(RenderModeBitMasks::BLUE_ONLY as u32);
+            } else if sdl2::keyboard::Keycode::Num4 == raw_keycode {
+              render_mode = RenderMode::from(RenderModeBitMasks::RGB as u32);
+            } else if sdl2::keyboard::Keycode::Num5 == raw_keycode {
+              render_mode = RenderMode::from(RenderModeBitMasks::RGBA as u32);
+            }
+          }
+        }
         Event::Window { win_event, .. } => match win_event {
           sdl2::event::WindowEvent::SizeChanged(x, y) => {
             canvas.set_logical_size(x as u32, y as u32);

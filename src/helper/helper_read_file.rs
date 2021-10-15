@@ -4,6 +4,7 @@ use sdl2::pixels::Color;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
+use std::rc::Rc;
 
 pub fn convert_ppm_file_to_pixel_buffer(path_to_file: String) -> Option<PixelBuffer> {
   let file = File::open(&path_to_file); //op(path_to_file);
@@ -36,16 +37,16 @@ pub fn convert_pam_file_to_pixel_buffer(path_to_file: String) -> Option<PixelBuf
   let mut result_height: u32 = 0;
 
   if can_open_file {
-    let reader = BufReader::<File>::new(file.unwrap());
-    let pam_header = parse_pam_header(reader);
+    let mut reader = BufReader::<File>::new(file.unwrap());
+    let pam_header = parse_pam_header(&mut reader);
+    if let Some(header) = pam_header {
+      if let Some(pixel_buffer) = parse_pam_data(header, &mut reader) {
+        return Some(pixel_buffer);
+      }
+    }
   } else {
     eprintln!("cannot open file {}", path_to_file);
     return None;
   }
-
-  Some(PixelBuffer {
-    buffer: result,
-    width: result_width,
-    height: result_height,
-  })
+  None
 }
